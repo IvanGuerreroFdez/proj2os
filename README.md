@@ -1,2 +1,6 @@
 # proj2os
-Project 2 of the Operating Systems subject 2023-24 INSG2A
+
+Authors: 
+Gracia de Vargas, Luis (INSG2A) 
+Guerrero Fernández, Iván (INSG2A) 
+Kleinschrot Colomer, Harald Xerxes (INSG2A)
