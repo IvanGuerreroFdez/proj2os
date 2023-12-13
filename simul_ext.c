@@ -40,6 +40,7 @@ int main() {
     char *order[COMLEN];
 	char *argument1[COMLEN];
 	char *argument2[COMLEN];
+
     unsigned long int m;
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
     EXT_BYTE_MAPS ext_bytemaps;
@@ -52,7 +53,43 @@ int main() {
     FILE *entranceFile;
 
     entranceFile = fopen("partition.bin", "r+b");
-    fread(&fileData, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, entranceFile);    
+    fread(&fileData, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, entranceFile); 
+
+    memcpy(&ext_superblock,(EXT_SIMPLE_SUPERBLOCK *)&fileData[0], SIZE_BLOQUE);
+    memcpy(&directory,(EXT_ENTRADA_DIR *)&fileData[3], SIZE_BLOQUE);
+    memcpy(&ext_bytemaps,(EXT_BLQ_INODOS *)&fileData[1], SIZE_BLOQUE);
+    memcpy(&ext_blq_inodes,(EXT_BLQ_INODOS *)&fileData[2], SIZE_BLOQUE);
+    memcpy(&memData,(EXT_DATOS *)&fileData[4],MAX_BLOQUES_DATOS*SIZE_BLOQUE);
+
+    for(;;) {
+        do {
+            printf(">> ");
+            fflush(stdin); // Cleans buffer for stdin
+            fgets(command, COMLEN, stdin);
+        } while(checkCommand(command, order, argument1, argument2) != 0);
+
+        if(strcmp(order, "dir")) {
+            directory(&directory, &ext_blq_inodes);
+            continue;
+        } // end if condition
+
+        recordInodeDirectory(&directory, &ext_blq_inodes, entranceFile);
+        recordByteMaps(&ext_bytemaps, entranceFile);
+        recordSuperBlock(&ext_superblock, entranceFile);
+
+        if(recordData) {
+            recordData(&memData, entranceFile);
+        } // end if condition
+
+        recordData = 0;
+
+        if(strcmp(order, "exit") == 0) {
+            recordData(&memData, entranceFile);
+            fclose(entranceFile);
+
+            return 0;
+        } // end if condition
+    } // end for loop 
 
     return 0;
 } // end of main
