@@ -42,7 +42,7 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
             return 0;
         } // end if condition
     } else if (count==2){
-        if(strcmp(order, "rename")==0 || strcmp(order, "imprimir")==0 || strcmp(order, "remove")==0) {
+        if(strcmp(order, "rename")==0 || strcmp(order, "print")==0 || strcmp(order, "remove")==0) {
             return 0;
         }
     } else if (count==3){
@@ -55,12 +55,19 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
     return -1;
 } // end of checkCommand
 
-void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {} // end of readSuperBlock
+void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
+    printf("Inodes count = %u\n", psup->s_inodes_count);
+    printf("Blocks count = %u\n", psup->s_blocks_count);
+    printf("Free Inodes count = %u\n", psup->s_free_blocks_count);
+    printf("Free Blocks count = %u\n", psup->s_free_inodes_count);
+    printf("First data block = %u\n", psup->s_first_data_block);
+    printf("Block Size: %u\n bytes", psup->s_block_size);
+} // end of readSuperBlock
 
 int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {} // end of searchFile
 
-void directory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
-    DIR *dr = opendir("."); // Opens current directory
+void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
+    DIR *dr = opendir("."); // Opens directory
     struct dirent *en;
 
     if(dr) { // If the directory exists
@@ -69,9 +76,10 @@ void directory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
             printf("Size: %d\t", inodes->blq_inodos->size_fichero);
             printf("Inode: %d\t", directory->dir_inodo);
             printf("Blocks: ");
-            for(int i = 0; i < sizeof(inodes->blq_relleno); i++) { // Not sure about this
+            for(int i = 0; i < directory->dir_inodo; i++) { // Not sure about this
                 printf("%d ", inodes->blq_relleno[i]); // Not sure about this
             } // end for loop
+            printf("\n");
         } // end while loop
     } // end if condition
     
@@ -79,7 +87,7 @@ void directory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
 } // end of directory
 
 int renameFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *nombreantiguo, char *nombrenuevo) {
-    DIR *dr = opendir(".");
+    DIR *dr = opendir("particion.bin");
     struct dirent *en;
     bool srcFileEx = false;
     bool newNameFileEx = false;
@@ -107,7 +115,21 @@ int renameFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *nombrea
     } // end if, else if, else conditions
 } // end of renameFile
 
-int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memdata, char *nombre) {} // end of print
+// Prints the contents of a file
+int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memdata, char *nombre) {
+    FILE *f = fopen(nombre, "r"); // Opens the file with the name "nombre"
+    char c;
+
+    if(f == NULL) {
+        printf("ERROR: File not found\n");
+    } else {
+        while((c = getc(f)) != EOF) {
+            printf("%c", c);
+        } // end while loop
+    } // end if else
+
+    fclose(f);
+} // end of print
 
 int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
@@ -117,21 +139,19 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdata, char *originName, char *destName,  FILE *f) {} // end of copy
 
-void recordInodeDirectory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, FILE *f) {} // end of recordInodeDirectory
+void recordInodeAndDirectory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, FILE *f) {} // end of recordInodeDirectory
 
 void recordByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *f) {} // end of recordByteMaps
 
 void recordSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *f) {} // end of recordSuperBlock
 
-void recordData(EXT_DATOS *memdata, FILE *f) {
-    
-} // end of recordData
+void recordData(EXT_DATOS *memdata, FILE *f) {} // end of recordData
 
 int main() {
-    char *command[COMLEN];
-    char *order[COMLEN];
-	char *argument1[COMLEN];
-	char *argument2[COMLEN];
+    char *command = (char *) malloc(sizeof(char) * COMLEN);
+    char *order = (char *) malloc(sizeof(char) * COMLEN);
+	char *argument1 = (char *) malloc(sizeof(char) * COMLEN);
+	char *argument2 = (char *) malloc(sizeof(char) * COMLEN);
 
     unsigned long int m;
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
@@ -160,27 +180,27 @@ int main() {
         } while(checkCommand(command, order, argument1, argument2) != 0);
 
         if (strcmp(order, "dir") == 0) {
-            directory(&directory, &ext_blq_inodes);
+            dir(directory, &ext_blq_inodes);
             continue;
         } // end if condition
 
-        recordInodeDirectory(&directory, &ext_blq_inodes, entranceFile);
+        //recordInodeDirectory(&directory, &ext_blq_inodes, entranceFile);
         recordByteMaps(&ext_bytemaps, entranceFile);
         recordSuperBlock(&ext_superblock, entranceFile);
 
         if (recordData) {
-            recordData(&memData, entranceFile);
+            //recordData(&memData, entranceFile);
         } // end if condition
 
         recordData = 0;
 
         if(strcmp(order, "exit") == 0) {
-            recordData(&memData, entranceFile);
+            //recordData(&memData, entranceFile);
             fclose(entranceFile);
 
             return 0;
         } // end if condition
     } // end for loop 
-
+    
     return 0;
 } // end of main
