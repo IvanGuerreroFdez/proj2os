@@ -69,7 +69,13 @@ void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
 
 // Function to find if a file exists
 int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {
-    // TODO
+    while() {
+        if(directory->dir_nfich == name) {
+            return 0; // Returns 0 if the file is found
+        } else {
+            return -1; // Returns -1 if the file is NOT found
+        } // end if else conditions
+    } // end while loop
 } // end of searchFile
 
 // Function to show the contents of a directory
