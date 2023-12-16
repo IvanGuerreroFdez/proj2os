@@ -19,6 +19,7 @@
 #define NULL_INODO 0xFFFF
 #define NULL_BLOQUE 0xFFFF
 
+// Function to print bytemaps
 void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     // Prints inodes
     printf("Inodes: ");
@@ -34,6 +35,7 @@ void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("\n");
 } // end of printByteMaps
 
+// Function to check if a command has the correct arguments
 int checkCommand(char *strcommand, char *order, char *argument1, char *argument2) {
     int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
 
@@ -55,6 +57,7 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
     return -1;
 } // end of checkCommand
 
+// Function to read superblock
 void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
     printf("Inodes count = %u\n", psup->s_inodes_count);
     printf("Blocks count = %u\n", psup->s_blocks_count);
@@ -64,8 +67,12 @@ void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
     printf("Block Size: %u\n bytes", psup->s_block_size);
 } // end of readSuperBlock
 
-int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {} // end of searchFile
+// Function to find if a file exists
+int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {
+    // TODO
+} // end of searchFile
 
+// Function to show the contents of a directory
 void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
     DIR *dr = opendir("."); // Opens directory
     struct dirent *en;
@@ -86,6 +93,7 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
     closedir(dr);
 } // end of directory
 
+// Function to rename a file
 int renameFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *nombreantiguo, char *nombrenuevo) {
     DIR *dr = opendir("particion.bin");
     struct dirent *en;
@@ -131,20 +139,26 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memdata
     fclose(f);
 } // end of print
 
+// Function to delete a file
 int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *name,  FILE *f) {} // end of delete
 
+// Function to copy a file
 int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdata, char *originName, char *destName,  FILE *f) {} // end of copy
 
+// Function to
 void recordInodeAndDirectory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, FILE *f) {} // end of recordInodeDirectory
 
+// Function to save bytemaps
 void recordByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *f) {} // end of recordByteMaps
 
+// Function to save superblock 
 void recordSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *f) {} // end of recordSuperBlock
 
+// Function to save data
 void recordData(EXT_DATOS *memdata, FILE *f) {} // end of recordData
 
 int main() {
@@ -179,10 +193,37 @@ int main() {
             fgets(command, COMLEN, stdin);
         } while(checkCommand(command, order, argument1, argument2) != 0);
 
+        // Commands to read: info, bytemaps, dir, rename, print, remove, copy, exit
         if (strcmp(order, "dir") == 0) {
             dir(directory, &ext_blq_inodes);
             continue;
-        } // end if condition
+        } else if(strcmp(order, "info") == 0) {
+            
+        } else if(strcmp(order, "bytemaps")) {
+            printByteMaps(&ext_bytemaps);
+            //continue;
+        } else if(strcmp(order, "rename")) {
+            if(checkCommand("rename", order, argument1, argument2) == 0) {
+                rename(argument1, argument2);
+            } // end if condition
+
+            continue;
+        } else if(strcmp(order, "print")) {
+            print(directory, &ext_blq_inodes, memData, argument1);
+            continue;
+        } else if(strcmp(order, "remove")) {
+            if(checkCommand("remove", order, argument1, NULL) == 0) {
+                delete(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, entranceFile);
+            } // end if condition
+
+            continue;
+        } else if(strcmp(order, "copy")) {
+            if(checkCommand("copy", order, argument1, argument2) == 0) {
+                copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, memData, argument1, argument2, entranceFile);
+            } // end if condition
+
+            continue;
+        } // end if, else if x7 conditions
 
         //recordInodeDirectory(&directory, &ext_blq_inodes, entranceFile);
         recordByteMaps(&ext_bytemaps, entranceFile);
