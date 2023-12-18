@@ -1,21 +1,24 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include "headers.h"
 
-#define COMLEN 100 // Command len
-#define SIZE_BLOQUE 512
-#define MAX_INODOS 24
-#define MAX_FICHEROS 20
-#define MAX_BLOQUES_DATOS 96
-#define PRIM_BLOQUE_DATOS 4
-#define MAX_BLOQUES_PARTICION MAX_BLOQUES_DATOS+PRIM_BLOQUE_DATOS // 96 + 4 = 100
-#define MAX_NUMS_BLOQUE_INODO 7
-#define LEN_NFICH 17
-#define NULL_INODO 0xFFFF
-#define NULL_BLOQUE 0xFFFF
+// Constants for better readability
+#define COMLEN 100           // Command length
+#define SIZE_BLOQUE 512       // Block size
+#define MAX_INODOS 24         // Maximum number of inodes
+#define MAX_FICHEROS 20       // Maximum number of files in directory
+#define MAX_BLOQUES_DATOS 96  // Maximum number of data blocks
+#define PRIM_BLOQUE_DATOS 4   // First data block number
+#define MAX_BLOQUES_PARTICION MAX_BLOQUES_DATOS + PRIM_BLOQUE_DATOS  // Total number of blocks in the partition
+#define MAX_NUMS_BLOQUE_INODO 7  // Maximum number of block indices in an inode
+#define LEN_NFICH 17            // Maximum length of a file name
+#define NULL_INODO 0xFFFF       // Null inode value
+#define NULL_BLOQUE 0xFFFF      // Null block value
 
+// Function to print byte maps
 void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("Inodes: ");
     for (int i = 0; i < MAX_INODOS; i++) {
@@ -29,6 +32,7 @@ void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("\n");
 }
 
+// Function to check the validity of the command
 int checkCommand(char *strcommand, char *order, char *argument1, char *argument2) {
     int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
 
@@ -49,6 +53,7 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
     return -1;
 }
 
+// Function to print information from the superblock
 void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
     printf("Inodes count = %u\n", psup->s_inodes_count);
     printf("Blocks count = %u\n", psup->s_blocks_count);
@@ -58,6 +63,7 @@ void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
     printf("Block Size: %u bytes\n", psup->s_block_size);
 }
 
+// Function to search for a file in the directory
 int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {
     for (int i = 0; i < MAX_FICHEROS; i++) {
         if (strcmp(directory[i].dir_nfich, name) == 0) {
@@ -67,6 +73,7 @@ int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {
     return -1;
 }
 
+// Function to print the directory contents
 void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
     for (int i = 0; i < MAX_FICHEROS; i++) {
         if (directory[i].dir_inodo != NULL_INODO) {
@@ -82,6 +89,7 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
     }
 }
 
+// Function to rename a file in the directory
 int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuevo) {
     int fileIndex = searchFile(directory, NULL, nombreantiguo);
     if (fileIndex != -1) {
@@ -89,7 +97,7 @@ int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuev
             strcpy(directory[fileIndex].dir_nfich, nombrenuevo);
             printf("File %s succesfully renamed!.\n", nombreantiguo);
         } else {
-            printf("ERROR: the file already exist (remember is case sensitive and try again).\n");
+            printf("ERROR: the file already exists (remember it is case-sensitive), try again.\n");
         }
     } else {
         printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", nombreantiguo);
@@ -97,6 +105,7 @@ int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuev
     return 0;
 }
 
+// Function to print the contents of a file
 int print(char *nombre) {
     FILE *f = fopen(nombre, "r");
     if (f == NULL) {
@@ -111,6 +120,7 @@ int print(char *nombre) {
     return 0;
 }
 
+// Function to delete a file from the directory and release associated blocks
 int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, char *name) {
     int fileIndex = searchFile(directory, inodes, name);
 
@@ -127,7 +137,7 @@ int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ex
     }
     return 0;
 }
-
+// Function to copy a file in the directory to another location
 int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps,
          EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *originName, char *destName) {
     int srcIndex = searchFile(directory, inodes, originName);
@@ -174,7 +184,7 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
                 printf("ERROR: Not enough inodes\n");
             }
         } else {
-            printf("ERROR: destination file %s already exist (remember is case sensitive and try again).\n", destName);
+            printf("ERROR: destination file %s already exists (remember it is case-sensitive), try again.\n", destName);
         }
     } else {
         printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", originName);
@@ -183,33 +193,40 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
     return 0;
 }
 
+// Function to record directory and inode data to the file
 void recordInodeAndDirectory(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, FILE *f) {
     fseek(f, SIZE_BLOQUE * 3, SEEK_SET);
     fwrite(directory, SIZE_BLOQUE, 1, f);
     fwrite(inodes, SIZE_BLOQUE, 1, f);
 }
 
+// Function to record bytemaps data to the file
 void recordByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *f) {
     fseek(f, SIZE_BLOQUE, SEEK_SET);
     fwrite(ext_bytemaps, SIZE_BLOQUE, 1, f);
 }
 
+// Function to record superblock data to the file
 void recordSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *f) {
     fseek(f, 0, SEEK_SET);
     fwrite(ext_superblock, SIZE_BLOQUE, 1, f);
 }
 
+// Function to record data blocks to the file
 void recordDataBlocks(EXT_DATOS *memdata, FILE *f) {
     fseek(f, SIZE_BLOQUE * 4, SEEK_SET);
     fwrite(memdata, SIZE_BLOQUE, MAX_BLOQUES_DATOS, f);
 }
 
+// Main function
 int main() {
+    // Memory allocation for command and arguments
     char *command = (char *)malloc(sizeof(char) * COMLEN);
     char *order = (char *)malloc(sizeof(char) * COMLEN);
     char *argument1 = (char *)malloc(sizeof(char) * COMLEN);
     char *argument2 = (char *)malloc(sizeof(char) * COMLEN);
 
+    // Declaration of data structures
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
     EXT_BYTE_MAPS ext_bytemaps;
     EXT_BLQ_INODOS ext_blq_inodes;
@@ -218,15 +235,18 @@ int main() {
     EXT_DATOS fileData[MAX_BLOQUES_PARTICION];
     int recordData = 0;
 
+    // File handling
     FILE *entranceFile = fopen("partition.bin", "rb");
     fread(&fileData, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, entranceFile);
 
+    // Data initialization from the file
     memcpy(&ext_superblock, (EXT_SIMPLE_SUPERBLOCK *)&fileData[0], SIZE_BLOQUE);
     memcpy(&directory, (EXT_ENTRADA_DIR *)&fileData[3], SIZE_BLOQUE);
     memcpy(&ext_bytemaps, (EXT_BYTE_MAPS *)&fileData[1], SIZE_BLOQUE);
     memcpy(&ext_blq_inodes, (EXT_BLQ_INODOS *)&fileData[2], SIZE_BLOQUE);
     memcpy(&memData, (EXT_DATOS *)&fileData[4], MAX_BLOQUES_DATOS * SIZE_BLOQUE);
 
+    // Main command processing loop
     for (;;) {
         do {
             printf(">> ");
@@ -235,7 +255,7 @@ int main() {
             command[strcspn(command, "\n")] = '\0';
         } while (checkCommand(command, order, argument1, argument2) != 0);
 
-        // Commands: info, bytemaps, dir, rename, print, remove, copy, exit
+        // Process each command
         if (strcmp(order, "dir") == 0) {
             dir(directory, &ext_blq_inodes);
             continue;
@@ -258,7 +278,7 @@ int main() {
                 delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
             }
             continue;
-                } else if (strcmp(order, "copy") == 0) {
+        } else if (strcmp(order, "copy") == 0) {
             if (checkCommand("copy", order, argument1, argument2) == 0) {
                 copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
             }
@@ -267,16 +287,18 @@ int main() {
             printf("You are exiting. Thanks for the visit, see you soon <3\n");
             break;
         } else {
-            printf("Command not found. Try again please.\n");
+            printf("Command not found. Try again, please.\n");
             continue;
         }
     }
 
+    // Write modified data structures back to the file
     recordSuperBlock(&ext_superblock, entranceFile);
     recordByteMaps(&ext_bytemaps, entranceFile);
     recordInodeAndDirectory(directory, &ext_blq_inodes, entranceFile);
     recordDataBlocks(memData, entranceFile);
 
+    // Close the file and free allocated memory
     fclose(entranceFile);
     free(command);
     free(order);
