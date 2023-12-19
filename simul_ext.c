@@ -44,9 +44,9 @@ void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
 // Function to check the validity of the command
 int checkCommand(char *strcommand, char *order, char *argument1, char *argument2) {
     int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
-    printf("command input(strcommand): %s\n", strcommand);
-    printf("command input(order): %s\n", order);
-    printf("command input(count): %d\n", count);
+    //printf("command input(strcommand): %s\n", strcommand);
+    //printf("command input(order): %s\n", order);
+    //printf("command input(count): %d\n", count);
 
     if (count == 1) {
         if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0) {
@@ -265,21 +265,17 @@ int main() {
 
     // File handling
     FILE *entranceFile = fopen("particion.bin", "r+b");
+
+    // Checking File existance
     if (entranceFile == NULL) {
         printf("Error opening the file\n");
         return 1;
     } // end if condition
-
-    fseek(entranceFile, 0, SEEK_SET);
-    fwrite(&ext_superblock, sizeof(EXT_SIMPLE_SUPERBLOCK), 1, entranceFile);
-    fwrite(&ext_bytemaps, sizeof(EXT_BYTE_MAPS), 1, entranceFile);
-    fwrite(&ext_blq_inodes, sizeof(EXT_BLQ_INODOS), 1, entranceFile);
-    fwrite(&directory, sizeof(EXT_ENTRADA_DIR), MAX_FICHEROS, entranceFile);
     fread(&fileData, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, entranceFile);
 
     // Data initialization from the file
     memcpy(&ext_superblock, (EXT_SIMPLE_SUPERBLOCK *)&fileData[0], SIZE_BLOQUE);
-    memcpy(&directory, (EXT_ENTRADA_DIR *)&fileData[3], SIZE_BLOQUE);
+    memcpy(&directory, (EXT_ENTRADA_DIR *)&fileData[3], sizeof(EXT_ENTRADA_DIR) * MAX_FICHEROS);
     memcpy(&ext_bytemaps, (EXT_BYTE_MAPS *)&fileData[1], SIZE_BLOQUE);
     memcpy(&ext_blq_inodes, (EXT_BLQ_INODOS *)&fileData[2], SIZE_BLOQUE);
     memcpy(&memData, (EXT_DATOS *)&fileData[4], MAX_BLOQUES_DATOS * SIZE_BLOQUE);
@@ -289,7 +285,6 @@ int main() {
         do {
             printf(">> ");
             fflush(stdin);
-            //while ((getchar()) != '\n');
             fgets(command, COMLEN, stdin);
             command[strcspn(command, "\n")] = '\0';
         } while (checkCommand(command, order, argument1, argument2) != 0);
