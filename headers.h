@@ -3,7 +3,7 @@
 #define MAX_FICHEROS 20
 #define MAX_BLOQUES_DATOS 96
 #define PRIM_BLOQUE_DATOS 4
-#define MAX_BLOQUES_PARTICION MAX_BLOQUES_DATOS+PRIM_BLOQUE_DATOS // 96 + 4 = 100
+#define MAX_BLOQUES_PARTICION MAX_BLOQUES_DATOS + PRIM_BLOQUE_DATOS // 96 + 4 = 100
   //Superblock + Bytemap Inode & Bytemap Block + Inodes + Directory
 #define MAX_NUMS_BLOQUE_INODO 7
 #define LEN_NFICH 17
@@ -45,6 +45,9 @@ typedef struct {
   char dir_nfich[LEN_NFICH];
   unsigned short int dir_inodo;
   //Agregar nuevo parametro para permisos
+    // Habría que hacer un comando para garantizar permisos
+    // Los permisos serian un string o un array de strings???
+    // Quizás un array de enteros (1 = permiso garantizado, 0 = sin permiso)
 } EXT_ENTRADA_DIR;
 
 /* Data blocks */
