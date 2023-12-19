@@ -36,10 +36,21 @@ void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
 
 // Function to check the validity of the command
 int checkCommand(char *strcommand, char *order, char *argument1, char *argument2) {
-    int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
-    //printf("command input(strcommand): %s\n", strcommand);
-    //printf("command input(order): %s\n", order);
-    //printf("command input(count): %d\n", count);
+    int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2); // ESTO HAY QUE VERLO IMPORTANTE
+    /* int count = 0, i = 0, j = 0;
+    char *division[3];
+    while(strcommand[i] != '\0') {
+        division[j][i - sizeof(division[j - 1])] = strcommand[i];
+        
+        if(strcommand[i] == ' ') {
+            count++;
+        } // end if condition
+
+        i++;
+    } // end for loop */
+
+    //count++;
+    printf("Count: %d\n", count);
 
     if (count == 1) {
         if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0) {
@@ -191,7 +202,6 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
                     ext_bytemaps->bmap_inodos[destInodeIndex] = 1;
 
                     for (int i = 0; i < numBlocks; i++) {
-                       //memmove(&memData[destBlockIndices[i]], &memData[inodes->blq_inodos[srcInodeIndex].i_nbloque[i]], SIZE_BLOQUE);
                         memmove(&ext_superblock->s_first_data_block + destBlockIndices[i],
                                 &ext_superblock->s_first_data_block + inodes->blq_inodos[srcInodeIndex].i_nbloque[i], SIZE_BLOQUE);
                         ext_bytemaps->bmap_bloques[destBlockIndices[i]] = 1;
@@ -242,14 +252,10 @@ void recordDataBlocks(EXT_DATOS *memdata, FILE *f) {
 // Main function
 int main() {
     // Memory allocation for command and arguments
-    /*char *command = (char *)malloc(sizeof(char) * COMLEN);
-    char *order = (char *)malloc(sizeof(char) * COMLEN);
-    char *argument1 = (char *)malloc(sizeof(char) * COMLEN);
-    char *argument2 = (char *)malloc(sizeof(char) * COMLEN);*/
-    char *command[COMLEN];
-	char *order[COMLEN];
-	char *argument1[COMLEN];
-	char *argument2[COMLEN];
+    char command[COMLEN];
+	char order[COMLEN];
+	char argument1[COMLEN];
+	char argument2[COMLEN];
 
     // Declaration of data structures
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
@@ -282,7 +288,7 @@ int main() {
         do {
             printf(">> ");
             fflush(stdin);
-            fgets(&command, COMLEN, stdin);
+            fgets(command, COMLEN, stdin);
             command[strcspn(command, "\n")] = '\0';
         } while (checkCommand(command, order, argument1, argument2) != 0);
 
@@ -300,7 +306,6 @@ int main() {
             if (checkCommand("rename", order, argument1, argument2) == 0) {
                 renameFile(directory, argument1, argument2);
             } // end if condition
-
             continue;
         } else if (strcmp(order, "print") == 0) {
             print(argument1);
@@ -309,13 +314,11 @@ int main() {
             if (checkCommand("remove", order, argument1, NULL) == 0) {
                 delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
             } // end if condition
-
             continue;
         } else if (strcmp(order, "copy") == 0) {
             if (checkCommand("copy", order, argument1, argument2) == 0) {
                 copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
             } // end if condition
-            
             continue;
         } else if (strcmp(order, "exit") == 0) {
             printf("You are exiting. Thanks for the visit, see you soon <3\n");
@@ -333,11 +336,7 @@ int main() {
     recordDataBlocks(memData, entranceFile);
 
     // Close the file and free allocated memory
-    /*fclose(entranceFile);
-    free(command);
-    free(order);
-    free(argument1);
-    free(argument2);*/
+    fclose(entranceFile);
 
     return 0;
 } // end of main
