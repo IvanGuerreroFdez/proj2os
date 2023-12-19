@@ -19,13 +19,6 @@
 #define NULL_INODO 0xFFFF       // Null inode value
 #define NULL_BLOQUE 0xFFFF      // Null block value
 
-/*EXT_SIMPLE_SUPERBLOCK ext_superblock;
-EXT_BYTE_MAPS ext_bytemaps;
-EXT_BLQ_INODOS ext_blq_inodes;
-EXT_ENTRADA_DIR directory[MAX_FICHEROS];
-EXT_DATOS memData[MAX_BLOQUES_DATOS];
-EXT_DATOS fileData[MAX_BLOQUES_PARTICION];*/
-
 // Function to print byte maps
 void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("Inodes: ");
@@ -249,10 +242,14 @@ void recordDataBlocks(EXT_DATOS *memdata, FILE *f) {
 // Main function
 int main() {
     // Memory allocation for command and arguments
-    char *command = (char *)malloc(sizeof(char) * COMLEN);
+    /*char *command = (char *)malloc(sizeof(char) * COMLEN);
     char *order = (char *)malloc(sizeof(char) * COMLEN);
     char *argument1 = (char *)malloc(sizeof(char) * COMLEN);
-    char *argument2 = (char *)malloc(sizeof(char) * COMLEN);
+    char *argument2 = (char *)malloc(sizeof(char) * COMLEN);*/
+    char *command[COMLEN];
+	char *order[COMLEN];
+	char *argument1[COMLEN];
+	char *argument2[COMLEN];
 
     // Declaration of data structures
     EXT_SIMPLE_SUPERBLOCK ext_superblock;
@@ -285,7 +282,7 @@ int main() {
         do {
             printf(">> ");
             fflush(stdin);
-            fgets(command, COMLEN, stdin);
+            fgets(&command, COMLEN, stdin);
             command[strcspn(command, "\n")] = '\0';
         } while (checkCommand(command, order, argument1, argument2) != 0);
 
@@ -336,11 +333,11 @@ int main() {
     recordDataBlocks(memData, entranceFile);
 
     // Close the file and free allocated memory
-    fclose(entranceFile);
+    /*fclose(entranceFile);
     free(command);
     free(order);
     free(argument1);
-    free(argument2);
+    free(argument2);*/
 
     return 0;
 } // end of main
