@@ -36,21 +36,8 @@ void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
 
 // Function to check the validity of the command
 int checkCommand(char *strcommand, char *order, char *argument1, char *argument2) {
-    int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2); // ESTO HAY QUE VERLO IMPORTANTE
-    /* int count = 0, i = 0, j = 0;
-    char *division[3];
-    while(strcommand[i] != '\0') {
-        division[j][i - sizeof(division[j - 1])] = strcommand[i];
-        
-        if(strcommand[i] == ' ') {
-            count++;
-        } // end if condition
-
-        i++;
-    } // end for loop */
-
-    //count++;
-    printf("Count: %d\n", count);
+    int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
+    //printf("Count: %d\n", count);
 
     if (count == 1) {
         if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0) {
@@ -126,20 +113,26 @@ int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuev
 } // end of renameFile
 
 // Function to print the contents of a file
-int print(char *nombre) {
-    FILE *f = fopen(nombre, "r");
+int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData, char *name) {
+    int fileIndex = searchFile(directory, inodes, name);
 
-    if (f == NULL) {
-        printf("ERROR: file not found. Use 'dir' to check the files ^^\n");
+    if (fileIndex != -1) {
+        int inodeIndex = directory[fileIndex].dir_inodo;
+        for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
+            int blockIndex = inodes->blq_inodos[inodeIndex].i_nbloque[i];
+            int j;
+            for (j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
+                printf("%c", memData[blockIndex].dato[j]); 
+            }
+        }
+        printf("\n");
+    } else {
+        printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
         return -1;
-    } // end if condition
-    
-    char c;
-    while ((c = getc(f)) != EOF) {
-        printf("%c", c);
-    } // end while loop
+    }
 
-    fclose(f);
+    return 0;
+
     return 0;
 } // end of print
 
@@ -308,7 +301,7 @@ int main() {
             } // end if condition
             continue;
         } else if (strcmp(order, "print") == 0) {
-            print(argument1);
+            print(directory, &ext_blq_inodes, memData, argument1);
             continue;
         } else if (strcmp(order, "remove") == 0) {
             if (checkCommand("remove", order, argument1, NULL) == 0) {
