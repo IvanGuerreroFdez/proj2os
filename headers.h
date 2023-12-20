@@ -44,10 +44,6 @@ typedef struct {
 typedef struct {
   char dir_nfich[LEN_NFICH];
   unsigned short int dir_inodo;
-  //Agregar nuevo parametro para permisos
-    // Habría que hacer un comando para garantizar permisos
-    // Los permisos serian un string o un array de strings???
-    // Quizás un array de enteros (1 = permiso garantizado, 0 = sin permiso)
 } EXT_ENTRADA_DIR;
 
 /* Data blocks */

@@ -19,6 +19,18 @@
 #define NULL_INODO 0xFFFF       // Null inode value
 #define NULL_BLOQUE 0xFFFF      // Null block value
 
+bool permissions = false;
+
+// Function to grant permisions
+void GrantPermissions() {
+    if (permissions == false) {
+        permissions = true;
+        printf("Permissions granted!\n");
+    } else {
+        printf("Permissions already granted!\n");
+    }
+}
+
 // Function to print byte maps
 void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("Inodes: ");
@@ -39,7 +51,7 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
     int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
 
     if (count == 1) {
-        if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0) {
+        if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0 || strcmp(order, "chmod") == 0) {
             return 0;
         } // end if condition
     } else if (count == 2) {
@@ -90,6 +102,11 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
                         printf("%d ", inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j]);
                     }
                 } // end for loop
+                if (permissions == true) {
+                    printf("\tEnough permisions");
+                } else {
+                    printf("\tNot enough permisions");
+                }
             }
             printf("\n");
         } // end if condition
@@ -119,24 +136,27 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData
     int fileIndex = searchFile(directory, inodes, name);
     int counter = 0;
 
-    if (fileIndex != -1) {
-        int inodeIndex = directory[fileIndex].dir_inodo;
-        for(int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
-            int blockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
+    if (permissions == true) {
+        if (fileIndex != -1) {
+            int inodeIndex = directory[fileIndex].dir_inodo;
+            for(int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
+                int blockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
 
-            //for (int j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
-            for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
-                counter++;
-                printf("%c", memData[blockIndex].dato[j]); 
+                //for (int j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
+                for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
+                    counter++;
+                    printf("%c", memData[blockIndex].dato[j]); 
+                } // end for loop
             } // end for loop
-        } // end for loop
 
-        printf("\n");
+            printf("\n");
+        } else {
+            printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
+            return -1;
+        } // end if else condition
     } else {
-        printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
-        return -1;
-    } // end if else condition
-
+        printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
+    }
     return 0;
 } // end of print
 
@@ -306,11 +326,13 @@ int main() {
             print(directory, &ext_blq_inodes, memData, argument1);
             continue;
         } else if (strcmp(order, "remove") == 0) {
-                delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
+            delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
             continue;
         } else if (strcmp(order, "copy") == 0) {
-            // if(checkCommand(command, order, argument1, argument2) == 0)
-                copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
+            copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
+            continue;
+        } else if (strcmp(order, "chmod") == 0) {
+            GrantPermissions();
             continue;
         } else if (strcmp(order, "exit") == 0) {
             printf("You are exiting. Thanks for the visit, see you soon <3\n");
