@@ -142,7 +142,6 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData
             for(int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
                 int blockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
 
-                //for (int j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
                 for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
                     counter++;
                     printf("%c", memData[blockIndex].dato[j]); 
@@ -188,6 +187,7 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
          char *originName, char *destName, FILE *entranceFile) {
     int sourceIndex = searchFile(directory, inodes, originName);
     int destIndex = searchFile(directory, NULL, destName);
+    int counter = 0;
 
     if (sourceIndex == -1) {
         printf("ERROR: Source file %s not found. Use 'dir' to check the files ^^\n", originName);
@@ -215,8 +215,13 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
     directory[freeInodeIndex].dir_inodo = destInodeIndex;
     inodes->blq_inodos[destInodeIndex].size_fichero = inodes->blq_inodos[directory[sourceIndex].dir_inodo].size_fichero;
 
-    for (int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) {
-        int sourceBlockIndex = inodes->blq_inodos[directory[sourceIndex].dir_inodo].i_nbloque[i];
+    int inodeIndex = directory[sourceIndex].dir_inodo;
+    for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
+        int sourceBlockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
+        for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
+                    counter++;
+                    //memData[inodes->blq_inodos[destInodeIndex].i_nbloque[i] - 4].dato[j] = memData[sourceBlockIndex].dato[j]; //Esto da un segmentation fault y termina la ejecucion
+                } // end for loop
         if (sourceBlockIndex == NULL_BLOQUE) {
             break; 
         }
@@ -323,7 +328,7 @@ int main() {
             printByteMaps(&ext_bytemaps);
             continue;
         } else if (strcmp(order, "rename") == 0) {
-                renameFile(directory, argument1, argument2);
+            renameFile(directory, argument1, argument2);
             continue;
         } else if (strcmp(order, "print") == 0) {
             print(directory, &ext_blq_inodes, memData, argument1);
