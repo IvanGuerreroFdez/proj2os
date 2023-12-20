@@ -61,8 +61,8 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
 void readSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
     printf("Inodes count = %u\n", psup->s_inodes_count);
     printf("Blocks count = %u\n", psup->s_blocks_count);
-    printf("Free Inodes count = %u\n", psup->s_free_blocks_count);
-    printf("Free Blocks count = %u\n", psup->s_free_inodes_count);
+    printf("Free Inodes count = %u\n", psup->s_free_inodes_count);
+    printf("Free Blocks count = %u\n", psup->s_free_blocks_count);
     printf("First data block = %u\n", psup->s_first_data_block);
     printf("Block Size: %u bytes\n", psup->s_block_size);
 } // end of readSuperBlock
@@ -80,15 +80,19 @@ int searchFile(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, char *name) {
 
 // Function to print the directory contents
 void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
-    for (int i = 0; i < MAX_FICHEROS; i++) {
+    for (int i = 1; i < MAX_FICHEROS; i++) {
         if (directory[i].dir_inodo != NULL_INODO) {
             printf("%s\t", directory[i].dir_nfich);
             printf("Size: %d\t", inodes->blq_inodos[directory[i].dir_inodo].size_fichero);
             printf("Inode: %d\t", directory[i].dir_inodo);
             printf("Blocks: ");
+
             for (int j = 0; j < MAX_NUMS_BLOQUE_INODO; j++) {
-                printf("%d ", inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j]);
+                if (inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j] != NULL_BLOQUE) {
+                    printf("%d ", inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j]);
+                }
             } // end for loop
+
             printf("\n");
         } // end if condition
     } // end for loop
@@ -144,13 +148,14 @@ int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ex
         int inodeIndex = directory[fileIndex].dir_inodo;
         for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
             ext_bytemaps->bmap_bloques[inodes->blq_inodos[inodeIndex].i_nbloque[i]] = 0;
-        } // end for loop
+        }
+
         ext_bytemaps->bmap_inodos[inodeIndex] = 0;
         memset(&directory[fileIndex], 0, sizeof(EXT_ENTRADA_DIR));
-        printf("The file %s has been deleted succesfully :)\n", name);
+        printf("The file %s has been deleted successfully :)\n", name);
     } else {
         printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
-    } // end if else conditions
+    }
 
     return 0;
 } // end of delete
@@ -320,7 +325,7 @@ int main() {
             printf("Command not found. Try again, please.\n");
             continue;
         } // end if, else if x7, else conditions
-    } // end for loop
+    } // end for loop    
 
     // Write modified data structures back to the file
     recordSuperBlock(&ext_superblock, entranceFile);
