@@ -161,7 +161,9 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData
 } // end of print
 
 // Function to delete a file from the directory and release associated blocks
-int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, char *name) {
+int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, 
+           EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, 
+           char *name, FILE *fich) {
     int fileIndex = searchFile(directory, inodes, name);
 
     if (fileIndex != -1) {
@@ -181,8 +183,9 @@ int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ex
 } // end of delete
 
 // Function to copy a file in the directory to another location
-int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *originName, char *destName) {
-    EXT_DATOS memData[MAX_BLOQUES_DATOS];
+int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, 
+         EXT_SIMPLE_SUPERBLOCK *ext_superblock, EXT_DATOS *memData, 
+         char *originName, char *destName, FILE *entranceFile) {
     int sourceIndex = searchFile(directory, inodes, originName);
     int destIndex = searchFile(directory, NULL, destName);
 
@@ -326,10 +329,10 @@ int main() {
             print(directory, &ext_blq_inodes, memData, argument1);
             continue;
         } else if (strcmp(order, "remove") == 0) {
-            delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
+            delete(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, NULL);
             continue;
         } else if (strcmp(order, "copy") == 0) {
-            copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
+            copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, memData, argument1, argument2, entranceFile);
             continue;
         } else if (strcmp(order, "chmod") == 0) {
             GrantPermissions();
