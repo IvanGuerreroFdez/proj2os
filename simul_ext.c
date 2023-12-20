@@ -117,13 +117,16 @@ int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuev
 // Function to print the contents of a file
 int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData, char *name) {
     int fileIndex = searchFile(directory, inodes, name);
+    int counter = 0;
 
     if (fileIndex != -1) {
         int inodeIndex = directory[fileIndex].dir_inodo;
         for(int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
-            int blockIndex = inodes->blq_inodos[inodeIndex].i_nbloque[i];
+            int blockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
 
-            for (int j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
+            //for (int j = 0; j < SIZE_BLOQUE && memData[blockIndex].dato[j] != '\0'; j++) {
+            for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
+                counter++;
                 printf("%c", memData[blockIndex].dato[j]); 
             } // end for loop
         } // end for loop
