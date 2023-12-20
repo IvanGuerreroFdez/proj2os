@@ -39,6 +39,10 @@ int checkCommand(char *strcommand, char *order, char *argument1, char *argument2
     int count = sscanf(strcommand, "%s %s %s", order, argument1, argument2);
     //printf("Count: %d\n", count);
 
+    /* printf("sizeof order: %d\n", strlen(order));
+    printf("order: %s\n", order);
+    printf("count: %d\n", count); */
+
     if (count == 1) {
         if (strcmp(order, "info") == 0 || strcmp(order, "bytemaps") == 0 || strcmp(order, "dir") == 0 || strcmp(order, "exit") == 0) {
             return 0;
@@ -301,22 +305,17 @@ int main() {
             printByteMaps(&ext_bytemaps);
             continue;
         } else if (strcmp(order, "rename") == 0) {
-            if (checkCommand("rename", order, argument1, argument2) == 0) {
                 renameFile(directory, argument1, argument2);
-            } // end if condition
             continue;
         } else if (strcmp(order, "print") == 0) {
             print(directory, &ext_blq_inodes, memData, argument1);
             continue;
         } else if (strcmp(order, "remove") == 0) {
-            if (checkCommand("remove", order, argument1, NULL) == 0) {
                 delete(directory, &ext_blq_inodes, &ext_bytemaps, argument1);
-            } // end if condition
             continue;
         } else if (strcmp(order, "copy") == 0) {
-            if (checkCommand("copy", order, argument1, argument2) == 0) {
+            // if(checkCommand(command, order, argument1, argument2) == 0)
                 copy(directory, &ext_blq_inodes, &ext_bytemaps, &ext_superblock, argument1, argument2);
-            } // end if condition
             continue;
         } else if (strcmp(order, "exit") == 0) {
             printf("You are exiting. Thanks for the visit, see you soon <3\n");
