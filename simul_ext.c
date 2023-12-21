@@ -227,12 +227,12 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
 
         int inodeIndex = directory[sourceIndex].dir_inodo;
 
-        for(int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) {
-            if (inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE) {
+        for(int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) { // Repeats 7 times
+            if (inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE) { // If the current inode is not null
                 int sourceBlockIndex = inodes->blq_inodos[inodeIndex].i_nbloque[i] - PRIM_BLOQUE_DATOS;
                 int destBlockIndex = -1;
 
-                for(int j = 0; j < MAX_BLOQUES_DATOS; j++) {
+                for(int j = 0; j < MAX_BLOQUES_DATOS; j++) { // Finds a free block in the block allocation map
                     if (ext_bytemaps->bmap_bloques[j] == 0) {
                         ext_bytemaps->bmap_bloques[j] = 1;
                         destBlockIndex = j;
@@ -240,14 +240,14 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
                     } // end if condition
                 } // end for loop
 
-                if(destBlockIndex == -1) {
+                if(destBlockIndex == -1) { // If there are no free blocks available
                     printf("ERROR: No free block available. Cannot copy the file.\n");
                     ext_bytemaps->bmap_inodos[destInodeIndex] = 0;
                     memset(&directory[freeInodeIndex], 0, sizeof(EXT_ENTRADA_DIR));
                     return -1;
                 } // end if condition
 
-                inodes->blq_inodos[destInodeIndex].i_nbloque[i] = destBlockIndex + PRIM_BLOQUE_DATOS;
+                inodes->blq_inodos[destInodeIndex].i_nbloque[i] = destBlockIndex + PRIM_BLOQUE_DATOS; // Updates the destination block to the actual block number
 
                 // Perform the actual data copy
                 memcpy(memData[destBlockIndex].dato, memData[sourceBlockIndex].dato, SIZE_BLOQUE);
@@ -361,7 +361,7 @@ int main() {
         } else {
             printf("Command not found. Try again, please.\n");
             continue;
-        } // end if, else if x7, else conditions
+        } // end if, else if x8, else conditions
     } // end for loop    
 
     // Write modified data structures back to the file
