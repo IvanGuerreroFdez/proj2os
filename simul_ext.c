@@ -28,8 +28,8 @@ void GrantPermissions() {
         printf("Permissions granted!\n");
     } else {
         printf("Permissions already granted!\n");
-    }
-}
+    } // end if else conditions
+} // end of GrantPermissions
 
 // Function to print byte maps
 void printByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
@@ -115,28 +115,33 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
 
 // Function to rename a file in the directory
 int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuevo) {
-    int fileIndex = searchFile(directory, NULL, nombreantiguo);
 
-    if (fileIndex != -1) {
-        if (searchFile(directory, NULL, nombrenuevo) == -1) {
-            strcpy(directory[fileIndex].dir_nfich, nombrenuevo);
-            printf("File %s succesfully renamed!.\n", nombreantiguo);
+    if (permissions == true) {
+        int fileIndex = searchFile(directory, NULL, nombreantiguo);
+        
+        if (fileIndex != -1) {
+            if (searchFile(directory, NULL, nombrenuevo) == -1) {
+                strcpy(directory[fileIndex].dir_nfich, nombrenuevo);
+                printf("File %s succesfully renamed!.\n", nombreantiguo);
+            } else {
+                printf("ERROR: the file already exists (remember it is case-sensitive), try again.\n");
+            } // end if else conditions
         } else {
-            printf("ERROR: the file already exists (remember it is case-sensitive), try again.\n");
+            printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", nombreantiguo);
         } // end if else conditions
     } else {
-        printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", nombreantiguo);
-    } // end if else conditions
-
+        printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
+    }
     return 0;
 } // end of renameFile
 
 // Function to print the contents of a file
 int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData, char *name) {
-    int fileIndex = searchFile(directory, inodes, name);
-    int counter = 0;
 
     if (permissions == true) {
+        int fileIndex = searchFile(directory, inodes, name);
+        int counter = 0;
+        
         if (fileIndex != -1) {
             int inodeIndex = directory[fileIndex].dir_inodo;
             for(int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
@@ -163,98 +168,95 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData
 int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, 
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, 
            char *name, FILE *fich) {
-    int fileIndex = searchFile(directory, inodes, name);
+    if (permissions == true) {
+        int fileIndex = searchFile(directory, inodes, name);
+ 
+        if(fileIndex != -1) {
+            int inodeIndex = directory[fileIndex].dir_inodo;
+            for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
+                ext_bytemaps->bmap_bloques[inodes->blq_inodos[inodeIndex].i_nbloque[i]] = 0;
+            } // end for loop
 
-    if (fileIndex != -1) {
-        int inodeIndex = directory[fileIndex].dir_inodo;
-        for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
-            ext_bytemaps->bmap_bloques[inodes->blq_inodos[inodeIndex].i_nbloque[i]] = 0;
-        }
-
-        ext_bytemaps->bmap_inodos[inodeIndex] = 0;
-        memset(&directory[fileIndex], 0, sizeof(EXT_ENTRADA_DIR));
-        printf("The file %s has been deleted successfully :)\n", name);
+            ext_bytemaps->bmap_inodos[inodeIndex] = 0;
+            memset(&directory[fileIndex], 0, sizeof(EXT_ENTRADA_DIR));
+            printf("The file %s has been deleted successfully :)\n", name);
+        } else {
+            printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
+        } // end if else conditions
     } else {
-        printf("ERROR: file %s is not found. Use 'dir' to check the files ^^\n", name);
-    }
-
+        printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
+    } // end if else conditions
+    
     return 0;
 } // end of delete
 
 // Function to copy a file in the directory to another location
 int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, EXT_DATOS *memData, char *originName, char *destName, FILE *entranceFile) {
-    int sourceIndex = searchFile(directory, inodes, originName);
-    int destIndex = searchFile(directory, NULL, destName);
-    int counter = 0;
+    if(permissions == true) {
+        int sourceIndex = searchFile(directory, inodes, originName);
+        int destIndex = searchFile(directory, NULL, destName);
 
-    if (sourceIndex == -1) {
-        printf("ERROR: Source file %s not found. Use 'dir' to check the files ^^\n", originName);
-        return -1;
-    }
-    if (destIndex != -1) {
-        printf("ERROR: Destination file %s already exists. Try a different name.\n", destName);
-        return -1;
-    }
-
-    int freeInodeIndex;
-    for (freeInodeIndex = 0; freeInodeIndex < MAX_INODOS; freeInodeIndex++) {
-        if (ext_bytemaps->bmap_inodos[freeInodeIndex] == 0) {
-            ext_bytemaps->bmap_inodos[freeInodeIndex] = 1; 
-            break;
-        }
-    }
-    if (freeInodeIndex == MAX_INODOS) {
-        printf("ERROR: No free inode available. Cannot copy the file.\n");
-        return -1;
-    }
-
-    printf("traza 1\n");
-    int destInodeIndex = freeInodeIndex;
-    /* strcpy(directory[freeInodeIndex].dir_nfich, destName);
-    directory[freeInodeIndex].dir_inodo = destInodeIndex;
-    inodes->blq_inodos[destInodeIndex].size_fichero = inodes->blq_inodos[directory[sourceIndex].dir_inodo].size_fichero; */
-
-    printf("traza 2\n");
-    int inodeIndex = directory[sourceIndex].dir_inodo;
-    for (int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) {
-        printf("traza 3\n");
-        int destBlockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
-        printf("traza 4\n");
-        for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
-            printf("traza 5\n");
-            counter++;
-            printf("traza 5.5\n");
-            memData[destBlockIndex].dato[j] = memData[inodes->blq_inodos[inodeIndex].i_nbloque[i] - 4].dato[j]; 
-            printf("traza 6\n");
-        } // end for loop
-        if (destBlockIndex == NULL_BLOQUE) {
-            break; 
-        }
-        printf("traza 7\n");
-        int freeBlockIndex;
-        printf("traza 8\n");
-        for (freeBlockIndex = 0; freeBlockIndex < MAX_BLOQUES_DATOS; freeBlockIndex++) {
-            printf("traza 9\n");
-            if (ext_bytemaps->bmap_bloques[freeBlockIndex] == 0) {
-                printf("traza 10\n");
-                ext_bytemaps->bmap_bloques[freeBlockIndex] = 1;  
-                break;
-            }
-        }
-        printf("traza 11\n");
-        if (freeBlockIndex == MAX_BLOQUES_DATOS) {
-            printf("ERROR: No free block available. Cannot copy the file.\n");
-            ext_bytemaps->bmap_inodos[destInodeIndex] = 0;
-            memset(&directory[freeInodeIndex], 0, sizeof(EXT_ENTRADA_DIR));
-
+        if (sourceIndex == -1) { // If the source file is not found
+            printf("ERROR: Source file %s not found. Use 'dir' to check the files ^^\n", originName);
             return -1;
-        }
-        inodes->blq_inodos[destInodeIndex].i_nbloque[i] = freeBlockIndex;
-        printf("traza 12\n");
-        memcpy(memData[freeBlockIndex].dato, memData[destBlockIndex].dato, SIZE_BLOQUE); //Esto da un segmentation fault y termina la ejecucion
-        printf("traza 13\n"); 
-    }
-    printf("File %s successfully copied to %s!\n", originName, destName);
+        } // end if condition
+
+        if (destIndex != -1) { // If the destination file is found
+            printf("ERROR: Destination file %s already exists. Try a different name.\n", destName);
+            return -1;
+        } // end if condition
+
+        int freeInodeIndex; // Free position to store the copied data
+        for (freeInodeIndex = 0; freeInodeIndex < MAX_INODOS; freeInodeIndex++) { // Finds a free position
+            if (ext_bytemaps->bmap_inodos[freeInodeIndex] == 0) {
+                ext_bytemaps->bmap_inodos[freeInodeIndex] = 1; 
+                break;
+            } // end if condition
+        } // end for loop
+
+        if (freeInodeIndex == MAX_INODOS) { // If there is no free space available
+            printf("ERROR: No free inode available. Cannot copy the file.\n");
+            return -1;
+        } // end if condition
+
+        int destInodeIndex = freeInodeIndex;
+        strcpy(directory[freeInodeIndex].dir_nfich, destName); // Destination file name application
+        directory[freeInodeIndex].dir_inodo = destInodeIndex; // Destination inode location application
+        inodes->blq_inodos[destInodeIndex].size_fichero = inodes->blq_inodos[directory[sourceIndex].dir_inodo].size_fichero; // Size of the destiny file is the same as the size of the source file
+
+        int inodeIndex = directory[sourceIndex].dir_inodo;
+
+        for(int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) {
+            if (inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE) {
+                int sourceBlockIndex = inodes->blq_inodos[inodeIndex].i_nbloque[i] - PRIM_BLOQUE_DATOS;
+                int destBlockIndex = -1;
+
+                for(int j = 0; j < MAX_BLOQUES_DATOS; j++) {
+                    if (ext_bytemaps->bmap_bloques[j] == 0) {
+                        ext_bytemaps->bmap_bloques[j] = 1;
+                        destBlockIndex = j;
+                        break;
+                    } // end if condition
+                } // end for loop
+
+                if(destBlockIndex == -1) {
+                    printf("ERROR: No free block available. Cannot copy the file.\n");
+                    ext_bytemaps->bmap_inodos[destInodeIndex] = 0;
+                    memset(&directory[freeInodeIndex], 0, sizeof(EXT_ENTRADA_DIR));
+                    return -1;
+                } // end if condition
+
+                inodes->blq_inodos[destInodeIndex].i_nbloque[i] = destBlockIndex + PRIM_BLOQUE_DATOS;
+
+                // Perform the actual data copy
+                memcpy(memData[destBlockIndex].dato, memData[sourceBlockIndex].dato, SIZE_BLOQUE);
+            } // end if condition
+        } // end for loop
+
+        printf("File %s successfully copied to %s!\n", originName, destName);
+    } else {
+        printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
+    } // end if else conditions
 
     return 0;
 } // end of copy
