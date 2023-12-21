@@ -182,9 +182,7 @@ int delete(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes,
 } // end of delete
 
 // Function to copy a file in the directory to another location
-int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, 
-         EXT_SIMPLE_SUPERBLOCK *ext_superblock, EXT_DATOS *memData, 
-         char *originName, char *destName, FILE *entranceFile) {
+int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, EXT_DATOS *memData, char *originName, char *destName, FILE *entranceFile) {
     int sourceIndex = searchFile(directory, inodes, originName);
     int destIndex = searchFile(directory, NULL, destName);
     int counter = 0;
@@ -226,7 +224,7 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
             printf("traza 5\n");
             counter++;
             printf("traza 5.5\n");
-            memData[destBlockIndex].dato[j] = memData[inodes->blq_inodos[inodeIndex].i_nbloque[i] - 4].dato[j]; //Esto da un segmentation fault y termina la ejecucion
+            memData[destBlockIndex].dato[j] = memData[inodes->blq_inodos[inodeIndex].i_nbloque[i] - 4].dato[j]; 
             printf("traza 6\n");
         } // end for loop
         if (destBlockIndex == NULL_BLOQUE) {
@@ -253,7 +251,7 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
         }
         inodes->blq_inodos[destInodeIndex].i_nbloque[i] = freeBlockIndex;
         printf("traza 12\n");
-        memcpy(memData[freeBlockIndex].dato, memData[destBlockIndex].dato, SIZE_BLOQUE);
+        memcpy(memData[freeBlockIndex].dato, memData[destBlockIndex].dato, SIZE_BLOQUE); //Esto da un segmentation fault y termina la ejecucion
         printf("traza 13\n"); 
     }
     printf("File %s successfully copied to %s!\n", originName, destName);
