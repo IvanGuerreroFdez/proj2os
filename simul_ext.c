@@ -100,14 +100,15 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
                 for (int j = 0; j < MAX_NUMS_BLOQUE_INODO; j++) {
                     if (inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j] != NULL_BLOQUE) {
                         printf("%d ", inodes->blq_inodos[directory[i].dir_inodo].i_nbloque[j]);
-                    }
+                    } // end if condition
                 } // end for loop
+
                 if (permissions == true) {
                     printf("\tEnough permisions");
                 } else {
                     printf("\tNot enough permisions");
-                }
-            }
+                } // end if else conditions
+            } // end if conditions
             printf("\n");
         } // end if condition
     } // end for loop
@@ -115,7 +116,6 @@ void dir(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes) {
 
 // Function to rename a file in the directory
 int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuevo) {
-
     if (permissions == true) {
         int fileIndex = searchFile(directory, NULL, nombreantiguo);
         
@@ -131,13 +131,13 @@ int renameFile(EXT_ENTRADA_DIR *directory, char *nombreantiguo, char *nombrenuev
         } // end if else conditions
     } else {
         printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
-    }
+    } // end if else conditions
+
     return 0;
 } // end of renameFile
 
 // Function to print the contents of a file
 int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData, char *name) {
-
     if (permissions == true) {
         int fileIndex = searchFile(directory, inodes, name);
         int counter = 0;
@@ -160,7 +160,8 @@ int print(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_DATOS *memData
         } // end if else condition
     } else {
         printf("Not enough permissions. Please type de comand 'chmod' to get root permissions!\n");
-    }
+    } // end if else conditions
+    
     return 0;
 } // end of print
 
