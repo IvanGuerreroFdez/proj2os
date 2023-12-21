@@ -210,30 +210,40 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
         return -1;
     }
 
+    printf("traza 1\n");
     int destInodeIndex = freeInodeIndex;
-    strcpy(directory[freeInodeIndex].dir_nfich, destName);
+    /* strcpy(directory[freeInodeIndex].dir_nfich, destName);
     directory[freeInodeIndex].dir_inodo = destInodeIndex;
-    inodes->blq_inodos[destInodeIndex].size_fichero = inodes->blq_inodos[directory[sourceIndex].dir_inodo].size_fichero;
+    inodes->blq_inodos[destInodeIndex].size_fichero = inodes->blq_inodos[directory[sourceIndex].dir_inodo].size_fichero; */
 
+    printf("traza 2\n");
     int inodeIndex = directory[sourceIndex].dir_inodo;
-    for (int i = 0; i < MAX_NUMS_BLOQUE_INODO && inodes->blq_inodos[inodeIndex].i_nbloque[i] != NULL_BLOQUE; i++) {
-        int sourceBlockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
+    for (int i = 0; i < MAX_NUMS_BLOQUE_INODO; i++) {
+        printf("traza 3\n");
+        int destBlockIndex = ((inodes->blq_inodos[inodeIndex].i_nbloque[i]) -4);
+        printf("traza 4\n");
         for (int j = 0; j < SIZE_BLOQUE && counter < inodes->blq_inodos[inodeIndex].size_fichero != '\0'; j++) {
-                    counter++;
-                    //memData[inodes->blq_inodos[destInodeIndex].i_nbloque[i] - 4].dato[j] = memData[sourceBlockIndex].dato[j]; //Esto da un segmentation fault y termina la ejecucion
-                } // end for loop
-        if (sourceBlockIndex == NULL_BLOQUE) {
+            printf("traza 5\n");
+            counter++;
+            printf("traza 5.5\n");
+            memData[destBlockIndex].dato[j] = memData[inodes->blq_inodos[inodeIndex].i_nbloque[i] - 4].dato[j]; //Esto da un segmentation fault y termina la ejecucion
+            printf("traza 6\n");
+        } // end for loop
+        if (destBlockIndex == NULL_BLOQUE) {
             break; 
         }
-
+        printf("traza 7\n");
         int freeBlockIndex;
+        printf("traza 8\n");
         for (freeBlockIndex = 0; freeBlockIndex < MAX_BLOQUES_DATOS; freeBlockIndex++) {
+            printf("traza 9\n");
             if (ext_bytemaps->bmap_bloques[freeBlockIndex] == 0) {
+                printf("traza 10\n");
                 ext_bytemaps->bmap_bloques[freeBlockIndex] = 1;  
                 break;
             }
         }
-
+        printf("traza 11\n");
         if (freeBlockIndex == MAX_BLOQUES_DATOS) {
             printf("ERROR: No free block available. Cannot copy the file.\n");
             ext_bytemaps->bmap_inodos[destInodeIndex] = 0;
@@ -242,7 +252,9 @@ int copy(EXT_ENTRADA_DIR *directory, EXT_BLQ_INODOS *inodes, EXT_BYTE_MAPS *ext_
             return -1;
         }
         inodes->blq_inodos[destInodeIndex].i_nbloque[i] = freeBlockIndex;
-        memcpy(memData[freeBlockIndex].dato, memData[sourceBlockIndex].dato, SIZE_BLOQUE);
+        printf("traza 12\n");
+        memcpy(memData[freeBlockIndex].dato, memData[destBlockIndex].dato, SIZE_BLOQUE);
+        printf("traza 13\n"); 
     }
     printf("File %s successfully copied to %s!\n", originName, destName);
 
